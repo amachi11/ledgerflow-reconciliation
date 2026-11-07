@@ -1,4 +1,5 @@
 """Explainable two-stage, one-to-one transaction matching."""
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 
 from ledgerflow.models import Match, ReconciliationResult, Transaction
@@ -35,24 +36,39 @@ def reconcile(
     if len(bank_remaining) != len(bank) or len(ledger_remaining) != len(ledger):
         raise ValueError("Transaction IDs must be unique within each input")
 
-    # Never guess between duplicate references; preserve ambiguous rows for review.
+    # Count references before assigning anything. A repeated bank reference can
+    # compete for a single ledger row, just as repeated ledger references can.
+    def reference_key(tx: Transaction) -> tuple | None:
+        reference = normalize_reference(tx.reference)
+        return (tx.amount, reference) if reference else None
+
+    bank_counts = Counter(key for tx in bank if (key := reference_key(tx)) is not None)
+    ledger_by_key: dict[tuple, list[Transaction]] = defaultdict(list)
+    for tx in ledger:
+        key = reference_key(tx)
+        if key:
+            ledger_by_key[key].append(tx)
+
     ambiguous: set[str] = set()
     for b in sorted(bank, key=lambda tx: tx.transaction_id):
-        if b.transaction_id not in bank_remaining:
+        key = reference_key(b)
+        if not key:
             continue
-        reference = normalize_reference(b.reference)
-        if not reference:
+
+        candidates = ledger_by_key.get(key, [])
+        if not candidates:
             continue
-        candidates = [l for l in ledger_remaining.values()
-                      if l.amount == b.amount and normalize_reference(l.reference) == reference]
-        if len(candidates) == 1:
-            l = candidates[0]
-            matches.append(Match(b.transaction_id, l.transaction_id, "reference", 100,
-                                 abs((b.booked_on - l.booked_on).days)))
-            del bank_remaining[b.transaction_id]
-            del ledger_remaining[l.transaction_id]
-        elif len(candidates) > 1:
+        if bank_counts[key] > 1 or len(candidates) > 1:
             ambiguous.add(b.transaction_id)
+            continue
+
+        l = candidates[0]
+        matches.append(Match(
+            b.transaction_id, l.transaction_id, "reference", 100,
+            abs((b.booked_on - l.booked_on).days),
+        ))
+        del bank_remaining[b.transaction_id]
+        del ledger_remaining[l.transaction_id]
 
     # Prioritize highly similar descriptions and then closer dates. Do not commit
     # if multiple remaining ledger candidates have the same best score.
