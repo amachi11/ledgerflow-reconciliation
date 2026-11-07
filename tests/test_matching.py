@@ -39,6 +39,27 @@ class MatchingTests(unittest.TestCase):
         r = reconcile(bank, ledger)
         self.assertEqual(r.ambiguous_bank, ("B1",))
 
+    def test_repeated_bank_reference_is_ambiguous(self):
+        bank = [
+            tx("B1", "12.00", "Invoice payment", "INV-9"),
+            tx("B2", "12.00", "Invoice payment", "inv9"),
+        ]
+        ledger = [tx("L1", "12.00", "Invoice payment", "INV9")]
+        result = reconcile(bank, ledger)
+        self.assertEqual(result.matches, ())
+        self.assertEqual(result.ambiguous_bank, ("B1", "B2"))
+        self.assertEqual(result.unmatched_ledger, ("L1",))
+
+    def test_same_reference_with_different_amounts_is_not_ambiguous(self):
+        bank = [tx("B1", "12.00", "Invoice", "INV-9"),
+                tx("B2", "15.00", "Invoice", "INV-9")]
+        ledger = [tx("L1", "15.00", "Invoice", "INV9"),
+                  tx("L2", "12.00", "Invoice", "INV9")]
+        result = reconcile(bank, ledger)
+        self.assertEqual({(m.bank_id, m.ledger_id) for m in result.matches},
+                         {("B1", "L2"), ("B2", "L1")})
+        self.assertEqual(result.ambiguous_bank, ())
+
     def test_same_ledger_cannot_be_used_twice(self):
         bank = [tx("B1", "4.00", "Coffee shop"), tx("B2", "4.00", "Coffee shop")]
         ledger = [tx("L1", "4.00", "Coffee shop")]
