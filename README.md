@@ -1,6 +1,6 @@
 # LedgerFlow Reconciliation
 
-A **small but real multi-module Python toolkit** for comparing bank transactions with an internal ledger. It works offline, uses Python's standard library, validates messy CSV inputs, performs explainable one-to-one matching, and exports audit-friendly reports.
+LedgerFlow compares bank transactions with entries from an internal ledger. It runs locally using the Python standard library, checks incoming CSV files, and produces reports showing which records were matched and which still need review.
 
 > For educational use and small local workflows. This is not accounting advice or a production banking system. Review every match before making a financial decision.
 
@@ -67,7 +67,7 @@ Only synthetic example records are committed. **Do not commit real bank exports,
 
 1. Exact signed amount + normalized reference has priority, even if dates differ.
 2. Remaining transactions can match by signed amount, nearby date (default: up to 3 days), and token overlap in their descriptions.
-3. Equal top candidates for a bank record are held for review rather than assigned.
+3. Repeated amount/reference combinations on either side are held for review instead of arbitrarily paired. Equal top description candidates are also held for review.
 4. Results list matched pairs, unmatched IDs on both sides, and ambiguous bank IDs.
 
 This rule-based method is deliberately understandable rather than claiming that every match is correct. In particular, when multiple bank records compete for one ledger transaction, one may be left unmatched and should be reviewed manually. The tool does not infer a match based only on an equal amount.
