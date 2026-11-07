@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ledgerflow-reconciliation"
+version = "0.1.0"
+description = "Deterministic CSV transaction reconciliation toolkit with explainable matching and audit reports"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["finance", "data-quality", "reconciliation", "python", "csv"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+
+[project.scripts]
+ledgerflow = "ledgerflow.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["ledgerflow*"]

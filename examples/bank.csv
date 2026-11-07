@@ -1,0 +1,5 @@
+id,date,amount,description,reference
+B-001,2026-01-10,-24.50,Office supplies purchase,POS-A100
+B-002,2026-01-11,-80.00,Monthly hosting service,
+B-003,2026-01-12,150.00,Client invoice deposit,INV-007
+B-004,2026-01-13,-11.99,Subscription charge,

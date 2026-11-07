@@ -1,0 +1,5 @@
+id,date,amount,description,reference
+L-101,2026-01-10,-24.50,Supplies for office,POS A100
+L-102,2026-01-12,-80.00,Service hosting monthly,
+L-103,2026-01-12,150.00,Invoice payment received,INV007
+L-104,2026-01-14,-36.00,Travel reimbursement,
